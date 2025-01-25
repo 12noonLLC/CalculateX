@@ -147,12 +147,12 @@ public class Workspaces
 	{
 		LoadedSelectedWorkspaceID = null;
 
-		// Try to load workspaces
 		if (!File.Exists(pathStorageFile))
 		{
 			return;
 		}
 
+		// Try to load workspaces
 		try
 		{
 			using StreamReader reader = new(pathStorageFile);

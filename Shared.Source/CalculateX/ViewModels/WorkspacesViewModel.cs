@@ -74,13 +74,39 @@ public class WorkspacesViewModel
 			.Save(pathWorkspacesFile);
 		}
 
-		XDocument xdoc = XDocument.Load(pathWorkspacesFile);
-		return new WorkspacesViewModel(xdoc);
+		return new WorkspacesViewModel(pathWorkspacesFile);
 	}
 
+
+	// Constructor chaining to the primary constructor
 	public WorkspacesViewModel(XDocument xdocWorkspaces)
+		: this(null, xdocWorkspaces)
 	{
-		_workspaces = new(xdocWorkspaces);
+	}
+
+	// Constructor chaining to the primary constructor
+	public WorkspacesViewModel(string pathWorkspacesFile)
+		: this(pathWorkspacesFile, null)
+	{
+	}
+
+	// Primary constructor
+	private WorkspacesViewModel(string? pathWorkspacesFile, XDocument? xdocWorkspaces)
+	{
+		Debug.Assert((pathWorkspacesFile is null) != (xdocWorkspaces is null), "One and only one parameter must be null.");
+
+		if (pathWorkspacesFile is not null)
+		{
+			_workspaces = new Workspaces(pathWorkspacesFile);
+		}
+		else if (xdocWorkspaces is not null)
+		{
+			_workspaces = new Workspaces(xdocWorkspaces);
+		}
+		else
+		{
+			throw new ArgumentException("Both parameters cannot be null.");
+		}
 
 		AddWorkspaceCommand = new RelayCommand(AddWorkspace);
 #if MY_WINDOWS_WPF
@@ -478,13 +504,13 @@ public class WorkspacesViewModel
 
 	/// <summary>
 	/// This method is responsible for synchronizing the deleted workspaces between
-	/// two instances of the <see cref="WorkspacesViewModel"/> class.
+	/// two instances of the <see cref="ViewModels.WorkspacesViewModel"/> class.
 	/// It removes the deleted workspaces from the second instance if they exist
 	/// in the first instance.
-	// The synchronization is performed by comparing the IDs of the deleted
-	// workspaces in `this` with the IDs of the workspaces in `that`.
-	// If a match is found, the workspace is removed from `that` and added to the
-	// collection of deleted workspaces of `that`.
+	/// The synchronization is performed by comparing the IDs of the deleted
+	/// workspaces in `this` with the IDs of the workspaces in `that`.
+	/// If a match is found, the workspace is removed from `that` and added to the
+	/// collection of deleted workspaces of `that`.
 	/// </summary>
 	/// <param name="vmWorkspacesThis">The first instance of the <see cref="WorkspacesViewModel"/> class.</param>
 	/// <param name="vmWorkspacesThat">The second instance of the <see cref="WorkspacesViewModel"/> class.</param>
@@ -499,11 +525,11 @@ public class WorkspacesViewModel
 			{
 				vmWorkspacesThat.DeleteWorkspace(wvmToDelete);
 
-				/// This is the same as <see cref="DeleteWorkspace(string)"/>
-				/// except that we set `LastModifiedUTC` the same as the
-				/// already-deleted one so the unit tests work.
-				// copy `LastModifiedUTC`
+				// This is the same as <see cref="DeleteWorkspace(string)"/>
+				// except that we set `LastModifiedUTC` the same as the
+				// already-deleted one so the unit tests work.
 				Workspace workspaceDeleted = vmWorkspacesThis._workspaces._deletedWorkspaces.First(w => w == wvmToDelete._workspace);
+				// copy `LastModifiedUTC`
 				wvmToDelete._workspace.LastModifiedUTC = workspaceDeleted.LastModifiedUTC;
 			});
 	}
@@ -526,7 +552,7 @@ public class WorkspacesViewModel
 				// add copy to That set of workspace view-models
 				wvmThat.AddWorkspaceViewModel(workspacevmCopy);
 
-				/// Internal Housekeeping <see cref="CreateWorkspace"/>
+				// Internal Housekeeping <see cref="CreateWorkspace"/>
 				wvmThat._workspaces.AddWorkspace(workspacevmCopy._workspace);
 				wvmThat.SubscribeViewModelEvents(workspacevmCopy);
 			}
@@ -538,12 +564,12 @@ public class WorkspacesViewModel
 		List<WorkspaceViewModel> newWorkspaceVMsThis = [];
 		List<WorkspaceViewModel> newWorkspaceVMsThat = [];
 
-		/// Add the workspaces that are in This but not in That to newWorkspaceVMsThis.
+		// Add the workspaces that are in This but not in That to newWorkspaceVMsThis.
 		newWorkspaceVMsThis.AddRange(wvmThis.TheWorkspaceViewModels.Except(wvmThat.TheWorkspaceViewModels));
-		/// Add the workspaces that are in That but not in This to newWorkspaceVMsThat.
+		// Add the workspaces that are in That but not in This to newWorkspaceVMsThat.
 		newWorkspaceVMsThat.AddRange(wvmThat.TheWorkspaceViewModels.Except(wvmThis.TheWorkspaceViewModels));
 
-		/// Find the workspaces that are in both This and That. Call SyncWorkspaceInputs on each.
+		// Find the workspaces that are in both This and That. Call SyncWorkspaceInputs on each.
 		foreach (WorkspaceViewModel workspacevmThis in wvmThis.TheWorkspaceViewModels)
 		{
 			WorkspaceViewModel? workspacevmThat = wvmThat.TheWorkspaceViewModels.FirstOrDefault(wvm => wvm == workspacevmThis);
@@ -611,13 +637,13 @@ public class WorkspacesViewModel
 	/// <remarks>
 	/// We always add the This workspace to the new list of This workspaces.
 	///
-	/// if This inputs have NOT changed && That inputs have NOT changed:
+	/// if This inputs have NOT changed AND That inputs have NOT changed:
 	///	do nothing
-	/// else if This inputs have changed && That inputs have NOT changed:
+	/// else if This inputs have changed AND That inputs have NOT changed:
 	/// 	copy This inputs to That workspace
-	/// else if That inputs have changed && This inputs have NOT changed:
+	/// else if That inputs have changed AND This inputs have NOT changed:
 	///	copy That inputs to This workspace
-	/// else if This inputs have changed && That inputs have changed:
+	/// else if This inputs have changed AND That inputs have changed:
 	/// 	clone This workspace
 	/// 	change This ID to a new GUID
 	/// 	add new This workspace to That document

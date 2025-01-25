@@ -286,7 +286,7 @@ public class WorkspaceViewModel : ObservableObject, ICloneable, IEquatable<Works
 
 		This code checks if the load key was provided in the query dictionary.
 		If this key is found, the value should be the identifier of the model
-		object to load. That note is loaded and set as the underlying model
+		object to load. That workspace is loaded and set as the underlying model
 		object of this view-model instance.
 	 */
 	public void ApplyQueryAttributes(IDictionary<string, object> query)
