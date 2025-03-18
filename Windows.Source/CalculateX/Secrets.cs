@@ -9,7 +9,6 @@
 using System;
 using System.Diagnostics;
 using System.Windows;
-using Shared;
 
 namespace CalculateX;
 
@@ -54,9 +53,9 @@ internal static class Secrets
 		ArgumentException.ThrowIfNullOrWhiteSpace(productID);
 		ArgumentException.ThrowIfNullOrWhiteSpace(publicKey);
 
-		LicenseManager manager = new();
-		string errorMessages = manager.IsLicenseValid(productID, publicKey);
-		if (!string.IsNullOrEmpty(errorMessages))
+		LicenseManager_12noon.Client.LicenseFile license = new();
+		bool isLicensesValid = license.IsLicenseValid(productID, publicKey, out string errorMessages);
+		if (!isLicensesValid)
 		{
 			MessageBox.Show(errorMessages, "Calculate X", MessageBoxButton.OK, MessageBoxImage.Error);
 			Application.Current.Shutdown();
@@ -64,9 +63,9 @@ internal static class Secrets
 		}
 
 		/// Set info for MainWindow title
-		License_Name = manager.Name;
-		License_Email = manager.Email;
-		License_Company = manager.Company;
+		License_Name = license.Name;
+		License_Email = license.Email;
+		License_Company = license.Company;
 
 		// TODO: display info about expiry?
 		//if (manager.ExpirationDays > 0)
