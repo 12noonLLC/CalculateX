@@ -6,7 +6,7 @@
 # - If the version tag is not on the 'main' branch, mark the GitHub release as 'draft'.
 # - Manual dispatch builds the project but does not create a GitHub release.
 
-name: Build Windows
+name: Build MAUI
 
 on:
   push:
@@ -18,7 +18,7 @@ on:
       - '**/*.gitattributes'
       - '**/*.md'
       - 'LICENSE'
-      - '**/maui.yml'
+      - '**/build-windows.yml'
       - 'CalculateX.png'
   pull_request:
     branches: [ main, yaml ]
@@ -27,7 +27,7 @@ on:
       - '**/*.gitattributes'
       - '**/*.md'
       - 'LICENSE'
-      - '**/maui.yml'
+      - '**/build-windows.yml'
       - 'CalculateX.png'
   workflow_dispatch:
 
@@ -37,8 +37,9 @@ permissions:
 
 env:
   # Path to the project files relative to the root of the project.
-  PROJECT_APP_FILE_PATH:     Windows.Source\CalculateX\CalculateX.csproj
-  PROJECT_TESTS_FILE_PATH:   Windows.Source\CalculateX.UnitTests\CalculateX.UnitTests.csproj
+  PROJECT_APP_FILE_PATH:     MAUI.Source\CalculateX\CalculateX.csproj
+  PROJECT_TESTS_FILE_PATH:   MAUI.Source\CalculateX.UnitTests\CalculateX.UnitTests.csproj
+  PUBLISH_FILES_PATH:        MAUI.Source\CalculateX\bin\Release\net8.0-android
 
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
@@ -118,46 +119,55 @@ jobs:
           dotnet-version: '8.0.x'
           dotnet-quality: ga
 
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+        #--ignore-failed-sources
+
       # Work around https://github.com/actions/setup-dotnet/issues/155
       - name: 🧹 Clean solution and NuGet
         run: |
-          dotnet clean --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
+          #dotnet clean --configuration ${{env.BUILD_CONFIGURATION}} --runtime win-x64
           dotnet nuget locals all --clear
 
       - name: 🏗 Build application
         run: |
-          dotnet build ${{env.PROJECT_APP_FILE_PATH}} --nologo `
-            --self-contained `
-            --runtime win-x64 `
+          #dotnet build ${{env.PROJECT_APP_FILE_PATH}} --nologo `
+          #  --self-contained `
+          #  --runtime win-x64 `
+          #  --configuration ${{env.BUILD_CONFIGURATION}}
+          dotnet build ${{env.SOLUTION_FILE_PATH}} --nologo `
             --configuration ${{env.BUILD_CONFIGURATION}} `
-            --property:DefineConstants="LICENSING MY_WINDOWS_WPF"
+            --framework net8.0-android
 
       # https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
       # verbosity detailed, minimal
-      - name: 💯 Run unit tests
+      #- name: 💯 Run unit tests
+      #  run: |
+      #    dotnet test ${{env.PROJECT_TESTS_FILE_PATH}} --nologo `
+      #      --verbosity normal --logger:"console;verbosity=normal" `
+      #      --runtime win-x64 `
+      #      --configuration Release
+      #    dotnet test ${{env.PROJECT_TESTS_FILE_PATH}} --nologo `
+      #      --verbosity normal --logger:"console;verbosity=normal" `
+      #      --runtime win-x64 `
+      #      --configuration Debug
+
+      - name: 🗒️ List folder
         run: |
-          dotnet test ${{env.PROJECT_TESTS_FILE_PATH}} --nologo `
-            --verbosity normal --logger:"console;verbosity=normal" `
-            --runtime win-x64 `
-            --configuration Release
-          dotnet test ${{env.PROJECT_TESTS_FILE_PATH}} --nologo `
-            --verbosity normal --logger:"console;verbosity=normal" `
-            --runtime win-x64 `
-            --configuration Debug
+          Get-ChildItem
+          Get-ChildItem .\${{env.PUBLISH_FILES_PATH}}\
 
       # Publish to sibling `release` folder.
       - name: 📁 Publish app to release folder
         run: |
-          # Build single-file deployment
-          dotnet publish ${{env.PROJECT_APP_FILE_PATH}} `
-            --property:PublishProfile=FolderProfile `
-            --output ./release/ `
-            --property:DefineConstants="LICENSING MY_WINDOWS_WPF"
+          New-Item -Path .\release -Type Directory
+          # com.x12noon.calculatex-Signed.aab
+          # com.x12noon.calculatex-Signed.apk
+          Copy-Item -Path .\${{env.PUBLISH_FILES_PATH}}\*-Signed.a?? -Destination .\release\
 
       - name: 📂 Copy extra files to release folder
         run: |
           Copy-Item -Path LICENSE -Destination ./release/
-          Copy-Item -Path Windows.Source/CalculateX.lic -Destination ./release/
 
       # Upload release artifact to share with next job
       # https://docs.github.com/en/actions/guides/storing-workflow-data-as-artifacts#about-workflow-artifacts
@@ -199,7 +209,10 @@ jobs:
   release:
     name: 🚀 Create GitHub release
     needs: build
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    #
+    # DISABLE THE release JOB BECAUSE WE DO NOT WANT TO RELEASE THE APK
+    #
+    if: ${{ false && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
 
     steps:
