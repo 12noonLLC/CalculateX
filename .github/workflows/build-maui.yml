@@ -50,7 +50,7 @@ env:
   ARTIFACT_PACKAGE: package-calculatex
 
 concurrency:
-  group: calculatex-${{ github.sha }}
+  group: calculatex-maui-${{ github.sha }}
   cancel-in-progress: true
 
 # Jobs are run in parallel unless `needs` is specified.
