@@ -9,7 +9,7 @@ echo.
 
 timeout /t -1
 
-dotnet clean DisplayChangerX\DisplayChangerX.csproj --nologo --configuration Release --runtime win-x64
+dotnet clean CalculateX\CalculateX.csproj --nologo --configuration Release --runtime win-x64
 
 dotnet build CalculateX\CalculateX.csproj --nologo --self-contained --configuration Release --runtime win-x64 --property:"DefineConstants=TRACE LICENSING"
 

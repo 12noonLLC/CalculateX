@@ -39,7 +39,7 @@ env:
   # Path to the project files relative to the root of the project.
   PROJECT_APP_FILE_PATH:     MAUI.Source\CalculateX\CalculateX.csproj
   PROJECT_TESTS_FILE_PATH:   MAUI.Source\CalculateX.UnitTests\CalculateX.UnitTests.csproj
-  PUBLISH_FILES_PATH:        MAUI.Source\CalculateX\bin\Release\net8.0-android
+  PUBLISH_FILES_PATH:        MAUI.Source\CalculateX\bin\Release\net9.0-android
 
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
@@ -116,7 +116,7 @@ jobs:
       - name: 🛠️ Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
           dotnet-quality: ga
 
       - name: Install MAUI workload
@@ -131,13 +131,11 @@ jobs:
 
       - name: 🏗 Build application
         run: |
-          #dotnet build ${{env.PROJECT_APP_FILE_PATH}} --nologo `
-          #  --self-contained `
-          #  --runtime win-x64 `
-          #  --configuration ${{env.BUILD_CONFIGURATION}}
           dotnet build ${{env.PROJECT_APP_FILE_PATH}} --nologo `
             --configuration ${{env.BUILD_CONFIGURATION}} `
-            --framework net8.0-android
+            --framework net9.0-android
+          #  --self-contained `
+          #  --runtime win-x64 `
 
       # https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
       # verbosity detailed, minimal
