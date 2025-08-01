@@ -114,7 +114,7 @@ public class WorkspacesViewModel
 		SelectPreviousWorkspaceCommand = new RelayCommand(SelectPreviousWorkspace);
 		SelectNextWorkspaceCommand = new RelayCommand(SelectNextWorkspace);
 #else
-		SynchronizeCommand = new AsyncRelayCommand<string>(SynchronizeWorkspaces);
+		SynchronizeCommand = new AsyncRelayCommand<string?>(SynchronizeWorkspaces);
 		AboutCommand = new AsyncRelayCommand(About);
 		SelectWorkspaceCommand = new AsyncRelayCommand<WorkspaceViewModel>(SelectWorkspaceAsync);
 #endif
@@ -436,15 +436,19 @@ public class WorkspacesViewModel
 
 #if MY_WINDOWS_WPF
 	// Windows needs to synchronize with a file--its own storage file when it's synchronized with OneDrive.
-	public void SynchronizeWorkspaces(string pathStorageFile)
+	public void SynchronizeWorkspaces(string? pathStorageFile)
 	{
+		ArgumentNullException.ThrowIfNull(nameof(pathStorageFile));
+
 		WorkspacesViewModel vmWorkspacesThat = ConstructFromFile(pathStorageFile);
 		Synchronize(vmWorkspacesThat);
 	}
 #elif ANDROID
 	// Android needs to sync with OneDrive directly.
-	public async Task SynchronizeWorkspaces(string pathStorageFile)
+	public async Task SynchronizeWorkspaces(string? pathStorageFile)
 	{
+		ArgumentNullException.ThrowIfNull(nameof(pathStorageFile));
+
 		XDocument? xdocThat = await TheOneDrive.DownloadXDocument(pathStorageFile);
 		if (xdocThat is null)
 		{
@@ -457,8 +461,10 @@ public class WorkspacesViewModel
 	}
 #else
 	// We do not support iOS (yet).
-	private async Task SynchronizeWorkspaces(string pathStorageFile)
+	private async Task SynchronizeWorkspaces(string? pathStorageFile)
 	{
+		ArgumentNullException.ThrowIfNull(nameof(pathStorageFile));
+
 		await Task.Delay(0);
 		//return Task.CompletedTask;
 	}
