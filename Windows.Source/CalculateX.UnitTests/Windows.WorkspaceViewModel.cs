@@ -121,6 +121,31 @@ public class TestWorkspaceViewModel
 		Assert.AreEqual(10, vm.InsertTextAtCursor(insertText, vm.Input.Length - insertText.Length, insertText.Length));
 	}
 
+	[TestMethod]
+	public void TestHyphenAsFirstCharacterDoesNotCrash()
+	{
+		Models.Workspace workspace = new("Test");
+		ViewModels.WorkspaceViewModel vm = new(workspace);
+
+		try
+		{
+			vm.Input = "-";
+			// Simulate what happens in Entry_TextChanged
+			if ((vm.Input.Length == 1) && (vm.Input[0] == '-'))
+			{
+				// This would call InsertTextAtCursor in the real handler
+				vm.InsertTextAtCursor(MathExpressions.MathEvaluator.AnswerVariable, 0, 0);
+
+				Assert.AreEqual("answer-", vm.Input);
+			}
+			// If no exception, test passes
+		}
+		catch (Exception ex)
+		{
+			Assert.Fail($"Exception thrown when entering hyphen: {ex.Message}");
+		}
+	}
+
 #if !MAUI_UNITTESTS
 	[TestMethod]
 	public void TestHelp()

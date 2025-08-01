@@ -55,10 +55,10 @@ public class WorkspaceViewModel : ObservableObject, ICloneable, IEquatable<Works
 		get => _input;
 		set
 		{
-			SetProperty(ref _input, value);
-#if MY_WINDOWS_WPF
-			EvaluateCommand.NotifyCanExecuteChanged();
-#endif
+			if (SetProperty(ref _input, value))
+			{
+				EvaluateCommand.NotifyCanExecuteChanged();
+			}
 		}
 	}
 	private string _input = string.Empty;

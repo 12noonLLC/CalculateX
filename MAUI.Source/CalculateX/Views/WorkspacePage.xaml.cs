@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui.Core.Platform;
 using System.Diagnostics;
+using System.Threading.Tasks;
 //using Microsoft.Maui.Controls.Platform;
 //using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
 
@@ -59,7 +60,7 @@ public partial class WorkspacePage : ContentPage, IQueryAttributable
 	/// </summary>
 	/// <param name="sender">TextBox for input</param>
 	/// <param name="e"></param>
-	private void Entry_TextChanged(object /*Entry*/ sender, TextChangedEventArgs e)
+	private async void Entry_TextChanged(object /*Entry*/ sender, TextChangedEventArgs e)
 	{
 		// This is true at startup.
 		if (ViewModel is null)
@@ -77,19 +78,18 @@ public partial class WorkspacePage : ContentPage, IQueryAttributable
 				// Position cursor at the end of the text (instead of after 'answer')
 				// We cannot just set the cursor position here. It stays after first character.
 				// So, we delay moving the cursor position until Text is set.
-				Task.Factory.StartNew(() => {
-					Thread.Sleep(50);
-					MainThread.BeginInvokeOnMainThread(() =>
-					{
-						// Code to run on the main thread
-						Entry textBox = (Entry)sender;
-						textBox.CursorPosition = ViewModel.Input.Length;
-					});
+				await Task.Delay(100);
+				MainThread.BeginInvokeOnMainThread(() =>
+				{
+					// Code to run on the main thread
+					Entry textBox = (Entry)sender;
+					Debug.WriteLine($"ViewModel.Input.Length = {ViewModel.Input.Length}");
+					textBox.CursorPosition = ViewModel.Input.Length;
 				});
 			}
 		}
 
-		ViewModel.EvaluateCommand.NotifyCanExecuteChanged();
+		//ViewModel.EvaluateCommand.NotifyCanExecuteChanged();
 	}
 
 	private async void HistoryEntries_SelectionChanged(object sender, SelectionChangedEventArgs e)
